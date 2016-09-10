@@ -26,12 +26,13 @@ func (wc *WordCount) Show() {
 }
 
 func main() {
-    filename := os.Args[1]
-    wc := WordCount{filename, 0}
-    err := wc.CountLines()
-    if err != nil {
-        fmt.Println(err)
-    } else {
+    for _, filename := range os.Args[1:] {
+        wc := WordCount{filename, 0}
+        err := wc.CountLines()
+        if err != nil {
+            fmt.Println(err)
+            continue
+        }
         wc.Show()
     }
 }
