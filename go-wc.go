@@ -12,12 +12,13 @@ type WordCount struct {
     lineCount int
 }
 
-func (wc *WordCount) CountLines() {
+func (wc *WordCount) CountLines() error {
     b, err := ioutil.ReadFile(wc.filename)
     if err != nil {
-        fmt.Printf("Cannot read %s.\n", wc.filename)
+        return err
     }
     wc.lineCount = bytes.Count(b, []byte{'\n'})
+    return nil
 }
 
 func (wc *WordCount) Show() {
@@ -27,6 +28,10 @@ func (wc *WordCount) Show() {
 func main() {
     filename := os.Args[1]
     wc := WordCount{filename, 0}
-    wc.CountLines()
-    wc.Show()
+    err := wc.CountLines()
+    if err != nil {
+        fmt.Println(err)
+    } else {
+        wc.Show()
+    }
 }
