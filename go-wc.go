@@ -4,6 +4,7 @@ import (
     "fmt"
     "io/ioutil"
     "bytes"
+    "os"
 )
 
 type WordCount struct {
@@ -24,7 +25,8 @@ func (wc *WordCount) Show() {
 }
 
 func main() {
-    wc := WordCount{"./go-wc.go", 0}
+    filename := os.Args[1]
+    wc := WordCount{filename, 0}
     wc.CountLines()
     wc.Show()
 }
