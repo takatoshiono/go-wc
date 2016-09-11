@@ -31,6 +31,22 @@ func (wc *WordCount) CountBytes() error {
     return nil
 }
 
+func (wc *WordCount) CountAll() error {
+    var err error
+
+    err = wc.CountLines()
+    if err != nil {
+        return err
+    }
+
+    err = wc.CountBytes()
+    if err != nil {
+        return err
+    }
+
+    return nil
+}
+
 func (wc *WordCount) Show() {
     fmt.Printf("%d\t%d\t%s\n", wc.lineCount, wc.bytes, wc.filename)
 }
@@ -38,19 +54,11 @@ func (wc *WordCount) Show() {
 func main() {
     for _, filename := range os.Args[1:] {
         wc := WordCount{filename, 0, 0}
-
-        err := wc.CountLines()
+        err := wc.CountAll()
         if err != nil {
             fmt.Println(err)
             continue
         }
-
-        err = wc.CountBytes()
-        if err != nil {
-            fmt.Println(err)
-            continue
-        }
-
         wc.Show()
     }
 }
