@@ -3,8 +3,8 @@ package main
 import (
     "fmt"
     "io/ioutil"
-    "bytes"
     "os"
+    "bufio"
 )
 
 type WordCount struct {
@@ -14,11 +14,26 @@ type WordCount struct {
 }
 
 func (wc *WordCount) CountLines() error {
-    b, err := ioutil.ReadFile(wc.filename)
+    var lineCount int
+    var fp *os.File
+    var err error
+
+    fp, err = os.Open(wc.filename)
     if err != nil {
         return err
     }
-    wc.lineCount = bytes.Count(b, []byte{'\n'})
+    defer fp.Close()
+
+    scanner := bufio.NewScanner(fp)
+    for scanner.Scan() {
+        scanner.Text()
+        lineCount++
+    }
+    if err = scanner.Err(); err != nil {
+        return err
+    }
+
+    wc.lineCount = lineCount
     return nil
 }
 
