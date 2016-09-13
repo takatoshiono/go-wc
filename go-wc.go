@@ -64,6 +64,10 @@ func (wc *WordCount) CountAll() error {
 	return nil
 }
 
+func (wc *WordCount) Show() {
+	fmt.Printf(" %7d %7d %7d %s\n", wc.lineCount, wc.wordCount, wc.bytes, wc.filename)
+}
+
 func (list WordCountList) Show() {
 	var lines, bytes, words int
 	for _, r := range list {
@@ -71,11 +75,7 @@ func (list WordCountList) Show() {
 		bytes += r.bytes
 		words += r.wordCount
 	}
-	fmt.Printf("%d\t%d\t%d\t%s\n", lines, words, bytes, "total")
-}
-
-func (wc *WordCount) Show() {
-	fmt.Printf("%d\t%d\t%d\t%s\n", wc.lineCount, wc.wordCount, wc.bytes, wc.filename)
+	fmt.Printf(" %7d %7d %7d %s\n", lines, words, bytes, "total")
 }
 
 func main() {
