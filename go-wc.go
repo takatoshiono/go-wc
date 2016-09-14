@@ -92,5 +92,7 @@ func main() {
 		results = append(results, wc)
 	}
 
-	results.Show()
+	if len(results) > 1 {
+		results.Show()
+	}
 }
