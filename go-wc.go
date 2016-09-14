@@ -2,10 +2,16 @@ package main
 
 import (
 	"bytes"
+	"flag"
 	"fmt"
 	"io/ioutil"
-	"os"
 )
+
+type FlagOptions struct {
+	printLines bool
+	printBytes bool
+	printWords bool
+}
 
 type WordCount struct {
 	filename  string
@@ -64,35 +70,72 @@ func (wc *WordCount) CountAll() error {
 	return nil
 }
 
-func (wc *WordCount) Show() {
-	fmt.Printf(" %7d %7d %7d %s\n", wc.lineCount, wc.wordCount, wc.bytes, wc.filename)
+func (wc *WordCount) Show(opts FlagOptions) {
+	if opts.printLines {
+		fmt.Printf(" %7d", wc.lineCount)
+	}
+	if opts.printWords {
+		fmt.Printf(" %7d", wc.wordCount)
+	}
+	if opts.printBytes {
+		fmt.Printf(" %7d", wc.bytes)
+	}
+	fmt.Printf(" %s\n", wc.filename)
 }
 
-func (list WordCountList) Show() {
+func (list WordCountList) Show(opts FlagOptions) {
 	var lines, bytes, words int
 	for _, r := range list {
 		lines += r.lineCount
 		bytes += r.bytes
 		words += r.wordCount
 	}
-	fmt.Printf(" %7d %7d %7d %s\n", lines, words, bytes, "total")
+
+	if opts.printLines {
+		fmt.Printf(" %7d", lines)
+	}
+	if opts.printWords {
+		fmt.Printf(" %7d", words)
+	}
+	if opts.printBytes {
+		fmt.Printf(" %7d", bytes)
+	}
+	fmt.Println(" total")
+}
+
+func parseFlagOptions() FlagOptions {
+	var opts FlagOptions
+	flag.BoolVar(&opts.printLines, "l", false, "print lines")
+	flag.BoolVar(&opts.printBytes, "c", false, "print bytes")
+	flag.BoolVar(&opts.printLines, "w", false, "print words")
+	flag.Parse()
+
+	if !opts.printLines && !opts.printBytes && !opts.printWords {
+		opts.printLines = true
+		opts.printBytes = true
+		opts.printWords = true
+	}
+
+	return opts
 }
 
 func main() {
-	results := make(WordCountList, 0, len(os.Args[1:]))
+	opts := parseFlagOptions()
 
-	for _, filename := range os.Args[1:] {
+	results := make(WordCountList, 0, len(flag.Args()))
+
+	for _, filename := range flag.Args() {
 		wc := WordCount{filename, 0, 0, 0}
 		err := wc.CountAll()
 		if err != nil {
 			fmt.Println(err)
 			continue
 		}
-		wc.Show()
+		wc.Show(opts)
 		results = append(results, wc)
 	}
 
 	if len(results) > 1 {
-		results.Show()
+		results.Show(opts)
 	}
 }
