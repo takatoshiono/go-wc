@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"os"
 )
 
 type FlagOptions struct {
@@ -119,10 +120,35 @@ func parseFlagOptions() FlagOptions {
 	return opts
 }
 
+func getFiles(filenames []string) ([]*os.File, error) {
+	if len(filenames) == 0 {
+		return []*os.File{os.Stdin}, nil
+	}
+
+	files := make([]*os.File, 0, len(filenames))
+	for _, filename := range filenames {
+		file, err := os.Open(filename)
+		if err != nil {
+			return files, err
+		}
+		files = append(files, file)
+	}
+	return files, nil
+}
+
 func main() {
 	opts := parseFlagOptions()
 
 	results := make(WordCountList, 0, len(flag.Args()))
+
+	files, err := getFiles(flag.Args())
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	for _, file := range files {
+		fmt.Printf("%s\n", file.Name())
+	}
 
 	for _, filename := range flag.Args() {
 		wc := WordCount{filename, 0, 0, 0}
