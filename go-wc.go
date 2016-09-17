@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 )
@@ -14,94 +15,10 @@ type FlagOptions struct {
 	printWords bool
 }
 
-type WordCount struct {
-	filename  string
-	lineCount int
-	bytes     int
-	wordCount int
-}
-
-type WordCountList []WordCount
-
-func (wc *WordCount) CountLines() error {
-	b, err := ioutil.ReadFile(wc.filename)
-	if err != nil {
-		return err
-	}
-	wc.lineCount = bytes.Count(b, []byte{'\n'})
-	return nil
-}
-
-func (wc *WordCount) CountBytes() error {
-	b, err := ioutil.ReadFile(wc.filename)
-	if err != nil {
-		return err
-	}
-	wc.bytes = len(b)
-	return nil
-}
-
-func (wc *WordCount) CountWords() error {
-	b, err := ioutil.ReadFile(wc.filename)
-	if err != nil {
-		return err
-	}
-	wc.wordCount = len(bytes.Fields(b))
-	return nil
-}
-
-func (wc *WordCount) CountAll() error {
-	var err error
-
-	err = wc.CountLines()
-	if err != nil {
-		return err
-	}
-
-	err = wc.CountBytes()
-	if err != nil {
-		return err
-	}
-
-	err = wc.CountWords()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (wc *WordCount) Show(opts FlagOptions) {
-	if opts.printLines {
-		fmt.Printf(" %7d", wc.lineCount)
-	}
-	if opts.printWords {
-		fmt.Printf(" %7d", wc.wordCount)
-	}
-	if opts.printBytes {
-		fmt.Printf(" %7d", wc.bytes)
-	}
-	fmt.Printf(" %s\n", wc.filename)
-}
-
-func (list WordCountList) Show(opts FlagOptions) {
-	var lines, bytes, words int
-	for _, r := range list {
-		lines += r.lineCount
-		bytes += r.bytes
-		words += r.wordCount
-	}
-
-	if opts.printLines {
-		fmt.Printf(" %7d", lines)
-	}
-	if opts.printWords {
-		fmt.Printf(" %7d", words)
-	}
-	if opts.printBytes {
-		fmt.Printf(" %7d", bytes)
-	}
-	fmt.Println(" total")
+type Count struct {
+	lines int
+	words int
+	bytes int
 }
 
 func parseFlagOptions() FlagOptions {
@@ -120,48 +37,70 @@ func parseFlagOptions() FlagOptions {
 	return opts
 }
 
-func getFiles(filenames []string) ([]*os.File, error) {
-	if len(filenames) == 0 {
-		return []*os.File{os.Stdin}, nil
+func count(r io.Reader) (Count, error) {
+	var c Count
+	b, err := ioutil.ReadAll(r)
+	if err != nil {
+		return c, err
 	}
+	c.lines = bytes.Count(b, []byte{'\n'})
+	c.bytes = len(b)
+	c.words = len(bytes.Fields(b))
+	return c, nil
+}
 
-	files := make([]*os.File, 0, len(filenames))
-	for _, filename := range filenames {
-		file, err := os.Open(filename)
-		if err != nil {
-			return files, err
-		}
-		files = append(files, file)
+func (c Count) Show(opts FlagOptions, filename string) {
+	if opts.printLines {
+		fmt.Printf(" %7d", c.lines)
 	}
-	return files, nil
+	if opts.printWords {
+		fmt.Printf(" %7d", c.words)
+	}
+	if opts.printBytes {
+		fmt.Printf(" %7d", c.bytes)
+	}
+	fmt.Printf(" %s\n", filename)
+}
+
+func (c *Count) Add(src Count) {
+	c.lines += src.lines
+	c.bytes += src.bytes
+	c.words += src.words
 }
 
 func main() {
 	opts := parseFlagOptions()
 
-	results := make(WordCountList, 0, len(flag.Args()))
+	var totalCount Count
 
-	files, err := getFiles(flag.Args())
-	if err != nil {
-		fmt.Println(err)
+	filenames := flag.Args()
+	if len(filenames) == 0 {
+		r, err := count(os.Stdin)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		r.Show(opts, "")
 		return
 	}
-	for _, file := range files {
-		fmt.Printf("%s\n", file.Name())
-	}
 
-	for _, filename := range flag.Args() {
-		wc := WordCount{filename, 0, 0, 0}
-		err := wc.CountAll()
+	for _, filename := range filenames {
+		fp, err := os.Open(filename)
 		if err != nil {
 			fmt.Println(err)
 			continue
 		}
-		wc.Show(opts)
-		results = append(results, wc)
+		r, err := count(fp)
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		totalCount.Add(r)
+		r.Show(opts, filename)
+		fp.Close()
 	}
 
-	if len(results) > 1 {
-		results.Show(opts)
+	if len(filenames) > 1 {
+		totalCount.Show(opts, "total")
 	}
 }
