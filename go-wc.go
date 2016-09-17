@@ -15,7 +15,7 @@ type FlagOptions struct {
 	printWords bool
 }
 
-type Count struct {
+type Counter struct {
 	lines int
 	words int
 	bytes int
@@ -37,19 +37,18 @@ func parseFlagOptions() FlagOptions {
 	return opts
 }
 
-func count(r io.Reader) (Count, error) {
-	var c Count
+func (c *Counter) Count(r io.Reader) (bool, error) {
 	b, err := ioutil.ReadAll(r)
 	if err != nil {
-		return c, err
+		return false, err
 	}
 	c.lines = bytes.Count(b, []byte{'\n'})
 	c.bytes = len(b)
 	c.words = len(bytes.Fields(b))
-	return c, nil
+	return true, nil
 }
 
-func (c Count) Show(opts FlagOptions, filename string) {
+func (c Counter) Show(opts FlagOptions, filename string) {
 	if opts.printLines {
 		fmt.Printf(" %7d", c.lines)
 	}
@@ -62,7 +61,7 @@ func (c Count) Show(opts FlagOptions, filename string) {
 	fmt.Printf(" %s\n", filename)
 }
 
-func (c *Count) Add(src Count) {
+func (c *Counter) Add(src Counter) {
 	c.lines += src.lines
 	c.bytes += src.bytes
 	c.words += src.words
@@ -71,32 +70,34 @@ func (c *Count) Add(src Count) {
 func main() {
 	opts := parseFlagOptions()
 
-	var totalCount Count
+	var totalCount Counter
 
 	filenames := flag.Args()
 	if len(filenames) == 0 {
-		r, err := count(os.Stdin)
+		var c Counter
+		_, err := c.Count(os.Stdin)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
-		r.Show(opts, "")
+		c.Show(opts, "")
 		return
 	}
 
 	for _, filename := range filenames {
+		var c Counter
 		fp, err := os.Open(filename)
 		if err != nil {
 			fmt.Println(err)
 			continue
 		}
-		r, err := count(fp)
+		_, err = c.Count(fp)
 		if err != nil {
 			fmt.Println(err)
 			continue
 		}
-		totalCount.Add(r)
-		r.Show(opts, filename)
+		totalCount.Add(c)
+		c.Show(opts, filename)
 		fp.Close()
 	}
 
