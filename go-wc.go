@@ -1,11 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 )
 
@@ -38,13 +38,16 @@ func parseFlagOptions() FlagOptions {
 }
 
 func (c *Counter) Count(r io.Reader) (bool, error) {
-	b, err := ioutil.ReadAll(r)
-	if err != nil {
-		return false, err
+	scanner := bufio.NewScanner(r)
+	scanner.Split(bufio.ScanBytes)
+	for scanner.Scan() {
+		b := scanner.Bytes()
+		if i := bytes.IndexByte(b, '\n'); i >= 0 {
+			c.lines += 1
+		}
+		c.bytes += len(b)
+		c.words += len(bytes.Fields(b))
 	}
-	c.lines = bytes.Count(b, []byte{'\n'})
-	c.bytes = len(b)
-	c.words = len(bytes.Fields(b))
 	return true, nil
 }
 
