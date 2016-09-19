@@ -38,15 +38,19 @@ func parseFlagOptions() FlagOptions {
 }
 
 func (c *Counter) Count(r io.Reader) (bool, error) {
-	scanner := bufio.NewScanner(r)
-	scanner.Split(bufio.ScanBytes)
-	for scanner.Scan() {
-		b := scanner.Bytes()
-		if i := bytes.IndexByte(b, '\n'); i >= 0 {
-			c.lines += 1
+	reader := bufio.NewReader(r)
+	for {
+		p := make([]byte, 4*1024)
+		n, err := reader.Read(p)
+		if n == 0 {
+			break
 		}
-		c.bytes += len(b)
-		c.words += len(bytes.Fields(b))
+		c.lines += bytes.Count(p, []byte{'\n'})
+		c.bytes += n
+		c.words += len(bytes.Fields(p))
+		if err == io.EOF {
+			break
+		}
 	}
 	return true, nil
 }
