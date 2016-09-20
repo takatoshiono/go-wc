@@ -54,8 +54,11 @@ func (c *Counter) Count(r io.Reader) (bool, error) {
 			break
 		}
 		// fix word count between the read buffer
-		// FIXME: but still wrong...
-		if !unicode.IsSpace(rune(p[n-1 : n][0])) {
+		next, err := reader.Peek(1)
+		if err != nil && err != io.EOF {
+			return false, err
+		}
+		if !unicode.IsSpace(rune(p[n-1 : n][0])) && !unicode.IsSpace(rune(next[0])) {
 			c.words -= 1
 		}
 	}
