@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"unicode"
 )
 
 type FlagOptions struct {
@@ -45,11 +46,17 @@ func (c *Counter) Count(r io.Reader) (bool, error) {
 		if n == 0 {
 			break
 		}
-		c.lines += bytes.Count(p, []byte{'\n'})
+		bytesRead := p[0:n]
+		c.lines += bytes.Count(bytesRead, []byte{'\n'})
 		c.bytes += n
-		c.words += len(bytes.Fields(p))
+		c.words += len(bytes.Fields(bytesRead))
 		if err == io.EOF {
 			break
+		}
+		// fix word count between the read buffer
+		// FIXME: but still wrong...
+		if !unicode.IsSpace(rune(p[n-1 : n][0])) {
+			c.words -= 1
 		}
 	}
 	return true, nil
