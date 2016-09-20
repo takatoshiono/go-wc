@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"unicode"
+	"unicode/utf8"
 )
 
 type FlagOptions struct {
@@ -49,7 +50,19 @@ func (c *Counter) Count(r io.Reader) (bool, error) {
 		bytesRead := p[0:n]
 		c.lines += bytes.Count(bytesRead, []byte{'\n'})
 		c.bytes += n
-		c.words += len(bytes.Fields(bytesRead))
+
+		// len(bytes.Fields(bytesRead)) だと遅いので `bytes.Fields` の前半部分を真似してカウントする
+		inField := false
+		for i := 0; i < len(bytesRead); {
+			r, size := utf8.DecodeRune(bytesRead[i:])
+			wasInField := inField
+			inField = !unicode.IsSpace(r)
+			if inField && !wasInField {
+				c.words += 1
+			}
+			i += size
+		}
+
 		if err == io.EOF {
 			break
 		}
