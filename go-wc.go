@@ -41,8 +41,8 @@ func parseFlagOptions() FlagOptions {
 
 func (c *Counter) Count(r io.Reader) (bool, error) {
 	reader := bufio.NewReader(r)
+	p := make([]byte, 4*1024)
 	for {
-		p := make([]byte, 4*1024)
 		n, err := reader.Read(p)
 		if n == 0 {
 			break
