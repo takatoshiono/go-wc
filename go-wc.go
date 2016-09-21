@@ -37,7 +37,7 @@ func (c *Counter) Count(r io.Reader) (bool, error) {
 
 		wg.Add(1)
 		go func() {
-			var localCounter Counter
+			var localCounter = &Counter{}
 			bytesRead := p[:n]
 			inField := false
 			for i := 0; i < len(bytesRead); {
@@ -86,7 +86,7 @@ func (c *Counter) Show(opts *FlagOptions, filename string) {
 	fmt.Printf(" %s\n", filename)
 }
 
-func (c *Counter) Add(src Counter) {
+func (c *Counter) Add(src *Counter) {
 	c.mux.Lock()
 	c.lines += src.lines
 	c.bytes += src.bytes
@@ -132,11 +132,11 @@ func parseFlagOptions() *FlagOptions {
 func main() {
 	opts := parseFlagOptions()
 
-	var totalCount Counter
+	var totalCount = &Counter{}
 
 	filenames := flag.Args()
 	if len(filenames) == 0 {
-		var c Counter
+		var c = &Counter{}
 		_, err := c.Count(os.Stdin)
 		if err != nil {
 			fmt.Println(err)
@@ -147,7 +147,7 @@ func main() {
 	}
 
 	for _, filename := range filenames {
-		var c Counter
+		var c = &Counter{}
 		fp, err := os.Open(filename)
 		if err != nil {
 			fmt.Println(err)
