@@ -23,22 +23,6 @@ type Counter struct {
 	bytes int
 }
 
-func parseFlagOptions() FlagOptions {
-	var opts FlagOptions
-	flag.BoolVar(&opts.printLines, "l", false, "print lines")
-	flag.BoolVar(&opts.printBytes, "c", false, "print bytes")
-	flag.BoolVar(&opts.printLines, "w", false, "print words")
-	flag.Parse()
-
-	if !opts.printLines && !opts.printBytes && !opts.printWords {
-		opts.printLines = true
-		opts.printBytes = true
-		opts.printWords = true
-	}
-
-	return opts
-}
-
 func (c *Counter) Count(r io.Reader) (bool, error) {
 	reader := bufio.NewReader(r)
 	p := make([]byte, 4*1024)
@@ -78,7 +62,7 @@ func (c *Counter) Count(r io.Reader) (bool, error) {
 	return true, nil
 }
 
-func (c Counter) Show(opts FlagOptions, filename string) {
+func (c Counter) Show(opts *FlagOptions, filename string) {
 	if opts.printLines {
 		fmt.Printf(" %7d", c.lines)
 	}
@@ -95,6 +79,23 @@ func (c *Counter) Add(src Counter) {
 	c.lines += src.lines
 	c.bytes += src.bytes
 	c.words += src.words
+}
+
+func parseFlagOptions() *FlagOptions {
+	var opts = &FlagOptions{false, false, false}
+
+	flag.BoolVar(&opts.printLines, "l", false, "print lines")
+	flag.BoolVar(&opts.printBytes, "c", false, "print bytes")
+	flag.BoolVar(&opts.printLines, "w", false, "print words")
+	flag.Parse()
+
+	if !opts.printLines && !opts.printBytes && !opts.printWords {
+		opts.printLines = true
+		opts.printBytes = true
+		opts.printWords = true
+	}
+
+	return opts
 }
 
 func main() {
