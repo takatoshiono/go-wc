@@ -86,7 +86,7 @@ func parseFlagOptions() *FlagOptions {
 
 	flag.BoolVar(&opts.printLines, "l", false, "print lines")
 	flag.BoolVar(&opts.printBytes, "c", false, "print bytes")
-	flag.BoolVar(&opts.printLines, "w", false, "print words")
+	flag.BoolVar(&opts.printWords, "w", false, "print words")
 	flag.Parse()
 
 	if !opts.printLines && !opts.printBytes && !opts.printWords {
