@@ -38,7 +38,7 @@ func (c *Counter) Count(r io.Reader) (bool, error) {
 		wg.Add(1)
 		go func() {
 			var localCounter Counter
-			bytesRead := p[0:n]
+			bytesRead := p[:n]
 			inField := false
 			for i := 0; i < len(bytesRead); {
 				r, size := utf8.DecodeRune(bytesRead[i:])
