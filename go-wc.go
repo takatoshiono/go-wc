@@ -62,7 +62,7 @@ func (c *Counter) Count(r io.Reader) (bool, error) {
 	return true, nil
 }
 
-func (c Counter) Show(opts *FlagOptions, filename string) {
+func (c *Counter) Show(opts *FlagOptions, filename string) {
 	if opts.printLines {
 		fmt.Printf(" %7d", c.lines)
 	}
