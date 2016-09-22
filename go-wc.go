@@ -139,7 +139,7 @@ func main() {
 		var c = &Counter{}
 		_, err := c.Count(os.Stdin)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Fprintln(os.Stderr, "stdin: count: ", err)
 			os.Exit(1)
 		}
 		c.Show(opts, "")
@@ -150,12 +150,12 @@ func main() {
 		var c = &Counter{}
 		fp, err := os.Open(filename)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Fprintf(os.Stderr, "%s: open: %s\n", filename, err)
 			continue
 		}
 		_, err = c.Count(fp)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Fprintf(os.Stderr, "%s: count: %s\n", filename, err)
 			continue
 		}
 		totalCount.Add(c)
