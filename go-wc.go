@@ -11,6 +11,8 @@ import (
 	"unicode/utf8"
 )
 
+const version = "0.0.1"
+
 type FlagOptions struct {
 	printLines bool
 	printBytes bool
