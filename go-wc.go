@@ -140,10 +140,10 @@ func main() {
 		_, err := c.Count(os.Stdin)
 		if err != nil {
 			fmt.Println(err)
-			return
+			os.Exit(1)
 		}
 		c.Show(opts, "")
-		return
+		os.Exit(0)
 	}
 
 	for _, filename := range filenames {
@@ -166,4 +166,6 @@ func main() {
 	if len(filenames) > 1 {
 		totalCount.Show(opts, "total")
 	}
+
+	os.Exit(0)
 }
