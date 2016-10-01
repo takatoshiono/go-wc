@@ -17,12 +17,14 @@ type FlagOptions struct {
 	printLines bool
 	printBytes bool
 	printWords bool
+	printChars bool
 }
 
 type Counter struct {
 	lines int
 	words int
 	bytes int
+	chars int
 	mux   sync.Mutex
 }
 
@@ -52,6 +54,7 @@ func (c *Counter) Count(r io.Reader) (bool, error) {
 				if r == '\n' {
 					localCounter.lines += 1
 				}
+				localCounter.chars += 1
 				i += size
 			}
 			c.Add(localCounter)
@@ -85,6 +88,9 @@ func (c *Counter) Show(opts *FlagOptions, filename string) {
 	if opts.printBytes {
 		fmt.Printf(" %7d", c.bytes)
 	}
+	if opts.printChars {
+		fmt.Printf(" %7d", c.chars)
+	}
 	fmt.Printf(" %s\n", filename)
 }
 
@@ -93,6 +99,7 @@ func (c *Counter) Add(src *Counter) {
 	c.lines += src.lines
 	c.bytes += src.bytes
 	c.words += src.words
+	c.chars += src.chars
 	c.mux.Unlock()
 }
 
@@ -115,14 +122,19 @@ func (c *Counter) AddWords(n int) {
 }
 
 func parseFlagOptions() *FlagOptions {
-	var opts = &FlagOptions{false, false, false}
+	var opts = &FlagOptions{false, false, false, false}
 
 	flag.BoolVar(&opts.printLines, "l", false, "print lines")
 	flag.BoolVar(&opts.printBytes, "c", false, "print bytes")
 	flag.BoolVar(&opts.printWords, "w", false, "print words")
+	flag.BoolVar(&opts.printChars, "m", false, "print chars")
 	flag.Parse()
 
-	if !opts.printLines && !opts.printBytes && !opts.printWords {
+	if opts.printChars {
+		opts.printBytes = false
+	}
+
+	if !opts.printLines && !opts.printBytes && !opts.printWords && !opts.printChars {
 		opts.printLines = true
 		opts.printBytes = true
 		opts.printWords = true
