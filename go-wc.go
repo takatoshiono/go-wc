@@ -8,7 +8,6 @@ import (
 	"os"
 	"sync"
 	"unicode"
-	"unicode/utf8"
 )
 
 const version = "0.0.1"
@@ -45,13 +44,13 @@ func (c *Counter) Count(r io.Reader) (bool, error) {
 			bytesRead := p[:n]
 			inField := false
 			for i := 0; i < len(bytesRead); {
-				r, size := utf8.DecodeRune(bytesRead[i:])
+				b, size := bytesRead[i : i+1][0], 1
 				wasInField := inField
-				inField = !unicode.IsSpace(r)
+				inField = !unicode.IsSpace(rune(b))
 				if inField && !wasInField {
 					localCounter.words += 1
 				}
-				if r == '\n' {
+				if rune(b) == '\n' {
 					localCounter.lines += 1
 				}
 				localCounter.chars += 1
